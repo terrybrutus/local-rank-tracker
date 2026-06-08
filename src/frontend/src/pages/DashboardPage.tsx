@@ -29,49 +29,6 @@ import { motion } from "motion/react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-function RankBadge({ rank }: { rank: number | null }) {
-  if (rank === null)
-    return (
-      <span
-        className="text-xs font-mono px-2 py-0.5 rounded-sm border border-border text-muted-foreground"
-        style={{ background: "rgba(255,255,255,0.04)" }}
-      >
-        N/A
-      </span>
-    );
-  const tier = getRankTier(BigInt(rank));
-  const styles = {
-    success: {
-      className: "text-green-300 border-green-500/40",
-      bg: "rgba(34,197,94,0.1)",
-      shadow: "0 0 8px rgba(34,197,94,0.3)",
-    },
-    mid: {
-      className: "text-yellow-300 border-yellow-500/40",
-      bg: "rgba(234,179,8,0.1)",
-      shadow: "0 0 8px rgba(234,179,8,0.25)",
-    },
-    poor: {
-      className: "text-rose-300 border-rose-500/40",
-      bg: "rgba(244,63,94,0.1)",
-      shadow: "0 0 8px rgba(244,63,94,0.25)",
-    },
-    notfound: {
-      className: "text-muted-foreground border-border",
-      bg: "rgba(255,255,255,0.04)",
-      shadow: "none",
-    },
-  }[tier];
-  return (
-    <span
-      className={`text-xs font-mono font-bold px-2 py-0.5 rounded-sm border ${styles.className}`}
-      style={{ background: styles.bg, boxShadow: styles.shadow }}
-    >
-      #{rank}
-    </span>
-  );
-}
-
 function MiniGrid({ results }: { results: RankResult[] }) {
   const COLORS: Record<string, string> = {
     success: "#22c55e",
@@ -100,7 +57,7 @@ function MiniGrid({ results }: { results: RankResult[] }) {
         const tier = getRankTier(rankVal);
         return (
           <div
-            key={i}
+            key={`${r.lat},${r.lng}`}
             style={{
               width: 12,
               height: 12,

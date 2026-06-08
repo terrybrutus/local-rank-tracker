@@ -519,7 +519,7 @@ export default function LoginPage() {
         © {new Date().getFullYear()} Local Rank Tracker
       </p>
 
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{"@keyframes spin { to { transform: rotate(360deg); } }"}</style>
     </div>
   );
 }
