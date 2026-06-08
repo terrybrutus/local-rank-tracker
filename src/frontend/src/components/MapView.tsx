@@ -294,7 +294,7 @@ const MAP_STYLES = `
     100% { transform: scale(2.5); opacity: 0; }
   }
   .leaflet-container { background: #050510 !important; }
-  .leaflet-tile-pane { filter: brightness(0.75) saturate(1.2); }
+  .leaflet-tile-pane { filter: brightness(0.9) saturate(1.1); }
   .leaflet-attribution-flag { display: none !important; }
   .leaflet-control-attribution {
     background: rgba(0,0,0,0.55) !important;
@@ -369,12 +369,14 @@ export function LeafletMap({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const gridMarkersRef = useRef<L.Marker[]>([]);
+  const gridLinesRef = useRef<L.Polyline[]>([]);
   const poiMarkersRef = useRef<L.Marker[]>([]);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const prevRef = useRef<{ lat: number; lng: number; radius: number } | null>(
     null,
   );
   const poiAbortRef = useRef<AbortController | null>(null);
+  const wasCellsNullRef = useRef(true);
   const [tileMode, setTileMode] = useState<"satellite" | "street">("street");
 
   const TILE_CONFIGS = {
@@ -382,12 +384,14 @@ export function LeafletMap({
       url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
       attribution: "© Esri",
       maxZoom: 19,
+      subdomains: "abc",
     },
     street: {
-      url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+      url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
       attribution:
-        '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, © <a href="https://carto.com/attributions">CARTO</a>',
       maxZoom: 19,
+      subdomains: "abcd",
     },
   } as const;
 
@@ -408,11 +412,12 @@ export function LeafletMap({
       touchZoom: true,
     });
 
-    // Initial tile layer — street
+    // Initial tile layer — street (CartoDB Dark Matter)
     const cfg = TILE_CONFIGS.street;
     const tile = L.tileLayer(cfg.url, {
       maxZoom: cfg.maxZoom,
       attribution: cfg.attribution,
+      subdomains: cfg.subdomains,
     });
     tile.addTo(map);
     tileLayerRef.current = tile;
@@ -427,17 +432,19 @@ export function LeafletMap({
     };
   }, []); // intentional mount-only
 
-  // Fetch and render POI layer
+  // Fetch and render POI layer — debounced 1.5s to avoid hammering Overpass on every keystroke
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !showPois) return;
     for (const m of poiMarkersRef.current) m.remove();
     poiMarkersRef.current = [];
     if (poiAbortRef.current) poiAbortRef.current.abort();
-    const ac = new AbortController();
-    poiAbortRef.current = ac;
-    const radiusMeters = Math.round(radiusMiles * 1609.34);
-    fetchPois(centerLat, centerLng, radiusMeters, ac.signal)
+
+    const debounceTimer = setTimeout(() => {
+      const ac = new AbortController();
+      poiAbortRef.current = ac;
+      const radiusMeters = Math.round(radiusMiles * 1609.34);
+      fetchPois(centerLat, centerLng, radiusMeters, ac.signal)
       .then((pois) => {
         if (ac.signal.aborted) return;
         const currentMap = mapRef.current;
@@ -525,8 +532,11 @@ export function LeafletMap({
       .catch(() => {
         /* POI is non-critical */
       });
+    }, 1500);
+
     return () => {
-      ac.abort();
+      clearTimeout(debounceTimer);
+      if (poiAbortRef.current) poiAbortRef.current.abort();
     };
   }, [centerLat, centerLng, radiusMiles, showPois, onPoiScan, onPoiSetCenter]);
 
@@ -542,6 +552,7 @@ export function LeafletMap({
     const tile = L.tileLayer(cfg.url, {
       maxZoom: cfg.maxZoom,
       attribution: cfg.attribution,
+      subdomains: cfg.subdomains,
     });
     tile.addTo(map);
     tileLayerRef.current = tile;
@@ -567,12 +578,25 @@ export function LeafletMap({
       prevRef.current = { lat: centerLat, lng: centerLng, radius: radiusMiles };
     }
 
-    // Clear old grid markers
+    // Clear old grid markers and lines
     for (const m of gridMarkersRef.current) m.remove();
     gridMarkersRef.current = [];
+    for (const l of gridLinesRef.current) l.remove();
+    gridLinesRef.current = [];
 
     const gridPoints = computeGridPoints(centerLat, centerLng, radiusMiles);
     const flatCells = cells ? cells.flat() : null;
+
+    // Auto-fit bounds when cells first become available
+    if (flatCells && wasCellsNullRef.current) {
+      wasCellsNullRef.current = false;
+      const bounds = L.latLngBounds(
+        gridPoints.map((p) => [p.lat, p.lng] as L.LatLngTuple),
+      );
+      map.fitBounds(bounds, { padding: [50, 50], animate: true, maxZoom: 15 });
+    } else if (!flatCells) {
+      wasCellsNullRef.current = true;
+    }
 
     gridPoints.forEach((pt, i) => {
       const direction = DIRECTIONS[i] ?? "";
@@ -614,6 +638,15 @@ export function LeafletMap({
       }
       gridMarkersRef.current.push(marker);
     });
+
+    // Grid connection lines (thin dashed cyan connecting the 3×3 points)
+    const lineStyle = { color: "rgba(0,217,255,0.18)", weight: 1, dashArray: "5 5" };
+    const rowGroups = [[0, 1, 2], [3, 4, 5], [6, 7, 8]];
+    const colGroups = [[0, 3, 6], [1, 4, 7], [2, 5, 8]];
+    for (const grp of [...rowGroups, ...colGroups]) {
+      const pts = grp.map((i) => [gridPoints[i].lat, gridPoints[i].lng] as L.LatLngTuple);
+      gridLinesRef.current.push(L.polyline(pts, lineStyle).addTo(map));
+    }
   }, [centerLat, centerLng, radiusMiles, cells, isPreview, onCenterDragged]);
 
   return (
@@ -668,7 +701,7 @@ export function LeafletMap({
           <span style={{ fontSize: 13 }}>
             {tileMode === "satellite" ? "🛰" : "🗺"}
           </span>
-          {tileMode === "satellite" ? "Satellite" : "Street"}
+          {tileMode === "satellite" ? "Satellite" : "Dark Map"}
           <span style={{ opacity: 0.5, fontSize: 9 }}>▼</span>
         </button>
       </div>
