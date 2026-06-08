@@ -1,0 +1,59 @@
+// Version: 1.0.0
+type Data__791452850<K, V> =
+  {var count : Nat__490723111; kvs : [var ?(K, V)]};
+type Internal__8484328<K, V> =
+  {children : [var ?Node__46230540<K, V>]; data : Data__791452850<K, V>};
+type Leaf__809889148<K, V> = {data : Data__791452850<K, V>};
+type Map__158565046<K, V> = Map__297112838<K, V>;
+type Map__297112838<K, V> =
+  {var root : Node__46230540<K, V>; var size : Nat__490723111};
+type Map__605269027<K, V> = Map__158565046<K, V>;
+type Nat__490723111 = Nat__920180692;
+type Nat__920180692 = Nat;
+type Node__46230540<K, V> =
+  {#internal : Internal__8484328<K, V>; #leaf : Leaf__809889148<K, V>};
+type PartialScan__1064382299 =
+  {
+    address : Text;
+    businessName : Text;
+    centerLat : Float;
+    centerLng : Float;
+    keyword : Text;
+    results : [RankResult__313234744];
+    startedAt : Timestamp__301639476
+  };
+type RankResult__313234744 = {lat : Float; lng : Float; rank : ?Nat};
+type SavedSearch__342378501 =
+  {
+    address : Text;
+    businessName : Text;
+    centerLat : Float;
+    centerLng : Float;
+    createdAt : Timestamp__301639476;
+    id : SearchId__767386794;
+    keyword : Text;
+    results : [RankResult__313234744];
+    userId : UserId__158757552
+  };
+type SearchId__767386794 = Nat;
+type Timestamp__301639476 = Int;
+type UserId__158757552 = Principal;
+type UserRole__1073662873 = {#admin; #guest; #user};
+type UserSettings__451559232 =
+  {serpApiKey : Text; userId : UserId__158757552};
+actor {
+  stable accessControlState :
+    {
+      var adminAssigned : Bool;
+      userRoles : Map__605269027<Principal, UserRole__1073662873>
+    };
+  stable searchState :
+    {
+      counterState : {var nextId : SearchId__767386794};
+      partialScans :
+        Map__605269027<UserId__158757552, PartialScan__1064382299>;
+      searches : Map__605269027<SearchId__767386794, SavedSearch__342378501>
+    };
+  stable settingsState :
+    {settings : Map__605269027<UserId__158757552, UserSettings__451559232>}
+};

@@ -1,0 +1,92 @@
+type http_request_result = 
+ record {
+   body: blob;
+   headers: vec http_header;
+   status: nat;
+ };
+type http_header = 
+ record {
+   name: text;
+   value: text;
+ };
+type UserRole = 
+ variant {
+   admin;
+   guest;
+   user;
+ };
+type UserId = principal;
+type TransformationOutput = 
+ record {
+   body: blob;
+   headers: vec http_header;
+   status: nat;
+ };
+type TransformationInput = 
+ record {
+   context: blob;
+   response: http_request_result;
+ };
+type Timestamp = int;
+type SearchId = nat;
+type SavedSearch = 
+ record {
+   address: text;
+   businessName: text;
+   centerLat: float64;
+   centerLng: float64;
+   createdAt: Timestamp;
+   id: SearchId;
+   keyword: text;
+   results: vec RankResult;
+   userId: UserId;
+ };
+type SaveSearchInput = 
+ record {
+   address: text;
+   businessName: text;
+   centerLat: float64;
+   centerLng: float64;
+   keyword: text;
+   results: vec RankResult;
+ };
+type RankResult = 
+ record {
+   lat: float64;
+   lng: float64;
+   rank: opt nat;
+ };
+type PartialScan = 
+ record {
+   address: text;
+   businessName: text;
+   centerLat: float64;
+   centerLng: float64;
+   keyword: text;
+   results: vec RankResult;
+   startedAt: Timestamp;
+ };
+service : {
+  _initializeAccessControl: () -> ();
+  assignCallerUserRole: (user: principal, role: UserRole) -> ();
+  clearLastPartialScan: () -> ();
+  deleteSavedSearch: (searchId: SearchId) -> ();
+  getCallerUserRole: () -> (UserRole) query;
+  getGridPoints: (centerLat: float64, centerLng: float64) ->
+   (vec record {
+          float64;
+          float64;
+        }) query;
+  getLastPartialScan: () -> (opt PartialScan) query;
+  getSavedSearch: (searchId: SearchId) -> (opt SavedSearch) query;
+  getSerpApiKey: () -> (opt text) query;
+  isCallerAdmin: () -> (bool) query;
+  listSavedSearches: () -> (vec SavedSearch) query;
+  queryGridPoint: (businessName: text, keyword: text, lat: float64, lng:
+   float64, gridIndex: nat) -> (opt nat);
+  saveSearch: (input: SaveSearchInput) -> (SearchId);
+  setSerpApiKey: (apiKey: text) -> ();
+  startScan: (businessName: text, keyword: text, address: text, centerLat:
+   float64, centerLng: float64) -> ();
+  transform: (input: TransformationInput) -> (TransformationOutput) query;
+}
