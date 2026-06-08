@@ -34,11 +34,6 @@ export function Layout({ children }: LayoutProps) {
       className="min-h-screen flex flex-col relative"
       style={{ background: "#050510" }}
     >
-      {/* Deep space background layers */}
-      <div className="nebula-bg" aria-hidden="true" />
-      <div className="star-field" aria-hidden="true" />
-      <div className="scanline-grid" aria-hidden="true" />
-
       {/* Top Nav — glassmorphic command bar */}
       <header
         className="sticky top-0 z-40"
