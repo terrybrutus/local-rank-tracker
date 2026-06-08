@@ -5,34 +5,34 @@ const DIRECTIONS = ["NW", "N", "NE", "W", "Center", "E", "SW", "S", "SE"];
 
 const TIER_META = {
   success: {
-    glow: "glow-cyan",
-    textColor: "text-[oklch(0.85_0.32_180)]",
-    bgCls: "bg-[oklch(0.14_0.06_180)]",
-    borderCls: "border-[oklch(0.72_0.32_180)]/40",
-    shadowVar: "rgba(0,217,255,0.7)",
-    radialVar: "rgba(0,217,255,0.1)",
+    textColor: "text-green-300",
+    bgInline: "rgba(20,83,45,0.45)",
+    borderCls: "border-green-500/40",
+    shadowStr: "0 0 16px rgba(34,197,94,0.45), 0 0 32px rgba(34,197,94,0.18), inset 0 0 10px rgba(34,197,94,0.08)",
+    shadowVar: "rgba(34,197,94,0.7)",
+    radialVar: "rgba(34,197,94,0.1)",
   },
   mid: {
-    glow: "glow-purple",
-    textColor: "text-[oklch(0.82_0.30_285)]",
-    bgCls: "bg-[oklch(0.14_0.05_285)]",
-    borderCls: "border-[oklch(0.68_0.30_285)]/40",
-    shadowVar: "rgba(189,0,255,0.65)",
-    radialVar: "rgba(189,0,255,0.09)",
+    textColor: "text-amber-300",
+    bgInline: "rgba(120,53,15,0.45)",
+    borderCls: "border-amber-500/40",
+    shadowStr: "0 0 16px rgba(245,158,11,0.45), 0 0 32px rgba(245,158,11,0.18), inset 0 0 10px rgba(245,158,11,0.08)",
+    shadowVar: "rgba(245,158,11,0.7)",
+    radialVar: "rgba(245,158,11,0.1)",
   },
   poor: {
-    glow: "glow-magenta",
-    textColor: "text-[oklch(0.80_0.30_15)]",
-    bgCls: "bg-[oklch(0.14_0.06_15)]",
-    borderCls: "border-[oklch(0.65_0.32_15)]/40",
-    shadowVar: "rgba(255,0,107,0.65)",
-    radialVar: "rgba(255,0,107,0.1)",
+    textColor: "text-red-300",
+    bgInline: "rgba(127,29,29,0.45)",
+    borderCls: "border-red-500/40",
+    shadowStr: "0 0 16px rgba(239,68,68,0.45), 0 0 32px rgba(239,68,68,0.18), inset 0 0 10px rgba(239,68,68,0.08)",
+    shadowVar: "rgba(239,68,68,0.7)",
+    radialVar: "rgba(239,68,68,0.1)",
   },
   notfound: {
-    glow: "glow-soft",
     textColor: "text-muted-foreground",
-    bgCls: "bg-[oklch(0.14_0.01_270)]",
+    bgInline: undefined as string | undefined,
     borderCls: "border-border/50",
+    shadowStr: "0 0 8px rgba(100,100,140,0.28), inset 0 0 6px rgba(100,100,140,0.04)",
     shadowVar: "rgba(100,100,140,0.35)",
     radialVar: "rgba(100,100,140,0.05)",
   },
@@ -68,15 +68,17 @@ function RankCell({ cell, index }: { cell: GridCell; index: number }) {
     <div
       className={[
         "relative w-full aspect-square flex flex-col items-center justify-center gap-1 rounded-sm border",
-        meta.bgCls,
         meta.borderCls,
-        meta.glow,
         "transition-all duration-300 ease-out cursor-default select-none",
         "hover:scale-105 hover:z-10",
         isCenter ? "ring-1 ring-white/10" : "",
       ]
         .filter(Boolean)
         .join(" ")}
+      style={{
+        background: (meta as { bgInline?: string }).bgInline ?? "oklch(0.14 0.01 270)",
+        boxShadow: (meta as { shadowStr?: string }).shadowStr,
+      }}
       title={`${direction} \u00b7 Lat: ${cell.lat.toFixed(4)}, Lng: ${cell.lng.toFixed(4)}`}
       data-ocid={`rank_grid.cell.${index + 1}`}
     >
@@ -121,26 +123,10 @@ function RankCell({ cell, index }: { cell: GridCell; index: number }) {
 }
 
 const LEGEND_ITEMS = [
-  {
-    color: "oklch(0.72 0.32 180)",
-    shadow: "rgba(0,217,255,0.8)",
-    label: "Rank 1\u20133",
-  },
-  {
-    color: "oklch(0.68 0.30 285)",
-    shadow: "rgba(189,0,255,0.8)",
-    label: "Rank 4\u201310",
-  },
-  {
-    color: "oklch(0.65 0.32 15)",
-    shadow: "rgba(255,0,107,0.8)",
-    label: "Rank 11+",
-  },
-  {
-    color: "oklch(0.45 0.02 270)",
-    shadow: "rgba(120,120,160,0.5)",
-    label: "Not found",
-  },
+  { color: "#22c55e", shadow: "rgba(34,197,94,0.8)", label: "Rank 1\u20133 \u00b7 Top" },
+  { color: "#f59e0b", shadow: "rgba(245,158,11,0.8)", label: "Rank 4\u201310 \u00b7 Mid" },
+  { color: "#ef4444", shadow: "rgba(239,68,68,0.8)", label: "Rank 11+ \u00b7 Low" },
+  { color: "oklch(0.45 0.02 270)", shadow: "rgba(120,120,160,0.5)", label: "Not found" },
 ];
 
 export function RankLegend() {

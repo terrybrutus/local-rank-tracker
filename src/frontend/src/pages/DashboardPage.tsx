@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDeleteSearch, useSavedSearches } from "@/hooks/useBackend";
 import { computeMetrics, getRankTier } from "@/types";
-import type { SavedSearch } from "@/types";
+import type { RankResult, SavedSearch } from "@/types";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
   CalendarDays,
@@ -42,9 +42,9 @@ function RankBadge({ rank }: { rank: number | null }) {
   const tier = getRankTier(BigInt(rank));
   const styles = {
     success: {
-      className: "text-cyan-300 border-cyan-500/40",
-      bg: "rgba(0,217,255,0.1)",
-      shadow: "0 0 8px rgba(0,217,255,0.3)",
+      className: "text-green-300 border-green-500/40",
+      bg: "rgba(34,197,94,0.1)",
+      shadow: "0 0 8px rgba(34,197,94,0.3)",
     },
     mid: {
       className: "text-yellow-300 border-yellow-500/40",
@@ -69,6 +69,49 @@ function RankBadge({ rank }: { rank: number | null }) {
     >
       #{rank}
     </span>
+  );
+}
+
+function MiniGrid({ results }: { results: RankResult[] }) {
+  const COLORS: Record<string, string> = {
+    success: "#22c55e",
+    mid: "#f59e0b",
+    poor: "#ef4444",
+    notfound: "#374151",
+  };
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(3, 1fr)",
+        gap: 3,
+        width: 42,
+        flexShrink: 0,
+      }}
+      title="Rank grid preview"
+    >
+      {results.slice(0, 9).map((r, i) => {
+        const rankVal =
+          r.rank != null
+            ? typeof r.rank === "bigint"
+              ? r.rank
+              : BigInt(r.rank as unknown as number)
+            : null;
+        const tier = getRankTier(rankVal);
+        return (
+          <div
+            key={i}
+            style={{
+              width: 12,
+              height: 12,
+              borderRadius: 2,
+              background: COLORS[tier],
+              opacity: tier === "notfound" ? 0.35 : 0.82,
+            }}
+          />
+        );
+      })}
+    </div>
   );
 }
 
@@ -134,7 +177,7 @@ function SearchCard({
             {search.keyword}
           </p>
         </div>
-        <RankBadge rank={metrics.avgRank} />
+        <MiniGrid results={search.results} />
       </div>
 
       {/* Meta row */}
