@@ -653,9 +653,9 @@ export default function SearchPage() {
                         backdropFilter: "blur(16px)",
                       }}
                     >
-                      {addrSuggestions.map((s, i) => (
+                      {addrSuggestions.map((s) => (
                         <button
-                          key={i}
+                          key={`${s.lat},${s.lon}`}
                           type="button"
                           className="w-full text-left px-3 py-2 text-xs transition-colors duration-150 flex items-center gap-2"
                           style={{ color: "rgba(200,200,220,0.85)" }}
