@@ -12,6 +12,7 @@ const STAT_META = [
     borderColor: "oklch(0.72 0.32 180 / 0.25)",
     ocid: "summary_bar.avg_rank",
     delay: "0ms",
+    subtext: "across 9 grid points",
   },
   {
     label: "Best Rank",
@@ -61,6 +62,7 @@ interface StatCardProps {
   borderColor: string;
   delay: string;
   ocid?: string;
+  subtext?: string;
 }
 
 function StatCard({
@@ -73,6 +75,7 @@ function StatCard({
   borderColor,
   delay,
   ocid,
+  subtext,
 }: StatCardProps) {
   const isNA = value === "N/A";
 
@@ -122,6 +125,14 @@ function StatCard({
       >
         {value}
       </p>
+      {subtext && (
+        <p
+          className="relative z-10 text-[9px] font-body leading-none"
+          style={{ color: "rgba(160,160,190,0.5)", marginTop: 2 }}
+        >
+          {subtext}
+        </p>
+      )}
     </div>
   );
 }
@@ -152,6 +163,7 @@ export function SummaryBar({ metrics, className = "" }: SummaryBarProps) {
             borderColor={meta.borderColor}
             delay={meta.delay}
             ocid={meta.ocid}
+            subtext={(meta as any).subtext}
           />
         );
       })}
