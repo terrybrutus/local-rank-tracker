@@ -47,7 +47,7 @@ function MiniGrid({ results }: { results: RankResult[] }) {
       }}
       title="Rank grid preview"
     >
-      {results.slice(0, 9).map((r, i) => {
+      {results.slice(0, 9).map((r) => {
         const rankVal =
           r.rank != null
             ? typeof r.rank === "bigint"
